@@ -2,42 +2,34 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
-using Terraria.Achievements;
 using Terraria.GameContent.UI.Elements;
+using Terraria.ModLoader;
 using Terraria.UI;
 
 namespace AchievementTree.Elements;
 public class UIAchievementItem : UIElement
 {
-    public bool locked = false;
+    public bool completed = false;
     public float opacity = 1f;
-
-    readonly Rectangle unlockedFrame;
-    readonly Rectangle lockedFrame;
 
     Rectangle frame;
 
     UIImageFramed Icon { get; set; }
     UIImage Border { get; set; }
 
-    public readonly Achievement achievement;
+    public readonly LocalAchievement localAchievement;
 
-    public UIAchievementItem(Achievement achievement) : base()
+    public UIAchievementItem(LocalAchievement localAchievement) : base()
     {
         Width = StyleDimension.FromPixels(72f);
         Height = StyleDimension.FromPixels(72f);
 
-        this.achievement = achievement;
-
-        int iconIndex = Main.Achievements.GetIconIndex(achievement.Name);
-        unlockedFrame = new(iconIndex % 8 * 66, iconIndex / 8 * 66, 64, 64);
-        lockedFrame = unlockedFrame;
-        lockedFrame.X += 528;
-        frame = lockedFrame;
+        this.localAchievement = localAchievement;
+        frame = localAchievement.icons.IncompleteFrame;
 
         UpdateFrame();
 
-        Icon = this.AddElement(new UIImageFramed(Main.Assets.Request<Texture2D>("Images/UI/Achievements"), frame).With(e =>
+        Icon = this.AddElement(new UIImageFramed(localAchievement.modded ? ModContent.Request<Texture2D>(localAchievement.icons.TexturePath, ReLogic.Content.AssetRequestMode.ImmediateLoad) : Main.Assets.Request<Texture2D>(localAchievement.icons.TexturePath, ReLogic.Content.AssetRequestMode.ImmediateLoad), frame).With(e =>
         {
             e.HAlign = 0.5f;
             e.VAlign = 0.5f;
@@ -50,7 +42,7 @@ public class UIAchievementItem : UIElement
     {
         base.DrawSelf(spriteBatch);
 
-        // locked = !Main.LocalPlayer.GetModPlayer<AchievementTreeModPlayer>().IsAchievementUnlocked[achievement.Id];
+        completed = Main.LocalPlayer.GetModPlayer<AchievementTreeModPlayer>().FindAchievement(localAchievement.name).isCompleted;
         UpdateFrame();
 
         Icon.Color = Border.Color = Color.White * opacity;
@@ -58,7 +50,7 @@ public class UIAchievementItem : UIElement
 
     private void UpdateFrame()
     {
-        frame = locked ? lockedFrame : unlockedFrame;
+        frame = completed ? localAchievement.icons.CompleteFrame : localAchievement.icons.CompleteFrame;
         Icon?.SetFrame(frame);
     }
 }

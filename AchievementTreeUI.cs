@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Terraria;
 using Terraria.Achievements;
@@ -17,15 +16,16 @@ using Terraria.UI;
 namespace AchievementTree;
 public class AchievementTreeUI : UIState
 {
+    static AchievementTreeModPlayer ModPlayer => Main.LocalPlayer.GetModPlayer<AchievementTreeModPlayer>();
+
     UIElement ContentContainer { get; set; }
     UIElement AchievementTreeContainer { get; set; }
 
-    readonly List<UIToggleImage> CategoryToggles = new();
-    readonly List<UIAchievementTreePanel> AchievementTreePanels = new() { new(), new(), new(), new(), new() };
-    readonly List<UIAchievementItem> AchievementItems = new();
+    readonly List<UIToggleImage> CategoryToggles = [];
+    readonly List<UIAchievementTreePanel> AchievementTreePanels = [new(), new(), new(), new(), new()];
+    readonly List<UIAchievementItem> AchievementItems = [];
 
-    private static Achievement FindAchievement(string name) => Main.Achievements.GetAchievement(name);
-    private UIAchievementItem FindAchievementItem(string name) => AchievementItems.FirstOrDefault(e => e.achievement.Name == name);
+    private UIAchievementItem FindAchievementItem(string name) => AchievementItems.FirstOrDefault(e => e.localAchievement.name == name);
 
     public override void OnInitialize()
     {
@@ -58,7 +58,7 @@ public class AchievementTreeUI : UIState
             var categoryToggle = CategoryContainer.AddElement(new UIToggleImage(ModContent.Request<Texture2D>("AchievementTree/Assets/Achievement_Categories"), 32, 32, new(34 * i, 0), new(34 * i, 34)).With(e =>
             {
                 e.Left = StyleDimension.FromPixels(i * 36f + 8f);
-                e.SetState(i == 3);
+                e.SetState(i == 0);
                 e.OnLeftClick += OnCategoryToggle;
                 CategoryToggles.Add(e);
             }));
@@ -91,7 +91,7 @@ public class AchievementTreeUI : UIState
             }
         });
 
-        ShowTreePanel(AchievementTreePanels[3]);
+        ShowTreePanel(AchievementTreePanels[0]);
     }
 
     private void OnCategoryToggle(UIMouseEvent evt, UIElement listeningElement)
@@ -137,13 +137,13 @@ public class AchievementTreeUI : UIState
             UIAchievementItem element = AchievementItems[i];
             if (!element.IsMouseHovering) continue;
 
-            hoverText = $"{element.achievement.FriendlyName}\n{element.achievement.Description}";
+            hoverText = $"{element.localAchievement.friendlyName}\n{element.localAchievement.description}";
 
             float x = FontAssets.MouseText.Value.MeasureString(hoverText).X;
 
             if (mouseTextPosition.X > Main.screenWidth - x) mouseTextPosition.X = Main.screenWidth - x;
 
-            Utils.DrawBorderStringFourWay(spriteBatch, FontAssets.MouseText.Value, hoverText, mouseTextPosition.X, mouseTextPosition.Y, element.locked ? Color.White : new Color(255, 221, 67), Color.Black, Vector2.Zero);
+            Utils.DrawBorderStringFourWay(spriteBatch, FontAssets.MouseText.Value, hoverText, mouseTextPosition.X, mouseTextPosition.Y, element.completed ? Color.White : new Color(255, 221, 67), Color.Black, Vector2.Zero);
 
             break;
         }
@@ -158,170 +158,190 @@ public class AchievementTreeUI : UIState
     private void PopulateTreePanel(UIAchievementTreePanel panel)
     {
         int index = AchievementTreePanels.IndexOf(panel);
-        List<UIAchievementItem> items = new();
+        List<UIAchievementItem> items = [];
+        int offsetX = 0;
 
         switch (index)
         {
             case 0:
                 break;
             case 1:
-                AppendAchievementItem(items, "VEHICULAR_MANSLAUGHTER", new(0, -6));
-                AppendAchievementItem(items, "EYE_ON_YOU", new(0, -2));
-                AppendAchievementItem(items, "WORM_FODDER", new(0, 0));
-                AppendAchievementItem(items, "STING_OPERATION", new(0, 2));
-                AppendAchievementItem(items, "PRETTY_IN_PINK", new(0, 6));
+                AppendAchievementItem(items, VanillaAchievementName.VEHICULAR_MANSLAUGHTER, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.EYE_ON_YOU, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.WORM_FODDER, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.STING_OPERATION, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.PRETTY_IN_PINK, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.DECEIVER_OF_FOOLS, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.SLIPPERY_SHINOBI, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.MASTERMIND, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.DEFEAT_DEERCLOPS, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.THERE_ARE_SOME_WHO_CALL_HIM, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.ARCHAEOLOGIST, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.TIL_DEATH, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.WALK_THE_PLANK, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.STILL_HUNGRY, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.DEFEAT_DREADNAUTILUS, new(offsetX, 8));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.GOBLIN_PUNTER, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.FISH_OUT_OF_WATER, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.BUCKETS_OF_BOLTS, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.DEFEAT_QUEEN_SLIME, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.DO_YOU_WANT_TO_SLAY_A_SNOWMAN, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.BALEFUL_HARVEST, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.THE_GREAT_SOUTHERN_PLANTKILL, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.ICE_SCREAM, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.DEFEAT_OLD_ONES_ARMY_TIER3, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.LIHZAHRDIAN_IDOL, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.DEFEAT_EMPRESS_OF_LIGHT, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.GAIN_TORCH_GODS_FAVOR, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.BONED, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.TIN_FOIL_HATTER, new(offsetX, 8));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.OBSESSIVE_DEVOTION, new(offsetX, 6));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.STAR_DESTROYER, new(offsetX, 6));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.CHAMPION_OF_TERRARIA, new(offsetX, 6));
 
-                AppendAchievementItem(items, "DECEIVER_OF_FOOLS", new(2, -6));
-                AppendAchievementItem(items, "SLIPPERY_SHINOBI", new(2, -2));
-                AppendAchievementItem(items, "MASTERMIND", new(2, 0));
-                AppendAchievementItem(items, "DEFEAT_DEERCLOPS", new(2, 2));
-                AppendAchievementItem(items, "THERE_ARE_SOME_WHO_CALL_HIM", new(2, 6));
-
-                AppendAchievementItem(items, "ARCHAEOLOGIST", new(4, -6));
-                AppendAchievementItem(items, "TIL_DEATH", new(4, 6));
-
-                AppendAchievementItem(items, "WALK_THE_PLANK", new(6, -2));
-                AppendAchievementItem(items, "STILL_HUNGRY", new(6, 0));
-                AppendAchievementItem(items, "DEFEAT_DREADNAUTILUS", new(6, 2));
-
-                AppendAchievementItem(items, "GOBLIN_PUNTER", new(8, -6));
-                AppendAchievementItem(items, "FISH_OUT_OF_WATER", new(8, -2));
-                AppendAchievementItem(items, "BUCKETS_OF_BOLTS", new(8, 0));
-                AppendAchievementItem(items, "DEFEAT_QUEEN_SLIME", new(8, 2));
-                AppendAchievementItem(items, "DO_YOU_WANT_TO_SLAY_A_SNOWMAN", new(8, 6));
-
-                AppendAchievementItem(items, "BALEFUL_HARVEST", new(10, -6));
-                AppendAchievementItem(items, "THE_GREAT_SOUTHERN_PLANTKILL", new(10, 0));
-                AppendAchievementItem(items, "ICE_SCREAM", new(10, 6));
-
-                AppendAchievementItem(items, "DEFEAT_OLD_ONES_ARMY_TIER3", new(12, -6));
-                AppendAchievementItem(items, "LIHZAHRDIAN_IDOL", new(12, 0));
-                AppendAchievementItem(items, "DEFEAT_EMPRESS_OF_LIGHT", new(12, 2));
-                AppendAchievementItem(items, "GAIN_TORCH_GODS_FAVOR", new(12, 6));
-
-                AppendAchievementItem(items, "BONED", new(14, -2));
-                AppendAchievementItem(items, "TIN_FOIL_HATTER", new(14, 2));
-
-                AppendAchievementItem(items, "OBSESSIVE_DEVOTION", new(16, 0));
-
-                AppendAchievementItem(items, "STAR_DESTROYER", new(18, 0));
-
-                AppendAchievementItem(items, "CHAMPION_OF_TERRARIA", new(20, 0));
-
-                ConnectAchievementItems("STILL_HUNGRY", new() { "BUCKETS_OF_BOLTS", "DEFEAT_QUEEN_SLIME", "FISH_OUT_OF_WATER", "WALK_THE_PLANK", "DEFEAT_DREADNAUTILUS" });
-                ConnectAchievementItems("THE_GREAT_SOUTHERN_PLANTKILL", new() { "BUCKETS_OF_BOLTS", "LIHZAHRDIAN_IDOL", "DEFEAT_EMPRESS_OF_LIGHT", "BALEFUL_HARVEST", "ICE_SCREAM" });
-                ConnectAchievementItems("LIHZAHRDIAN_IDOL", new() { "TIN_FOIL_HATTER", "DEFEAT_OLD_ONES_ARMY_TIER3" });
-                ConnectAchievementItems("OBSESSIVE_DEVOTION", new() { "BONED", "LIHZAHRDIAN_IDOL", "STAR_DESTROYER" });
-                ConnectAchievementItems("CHAMPION_OF_TERRARIA", new() { "STAR_DESTROYER" });
+                ConnectAchievementItems(VanillaAchievementName.STILL_HUNGRY, [VanillaAchievementName.BUCKETS_OF_BOLTS, VanillaAchievementName.DEFEAT_QUEEN_SLIME, VanillaAchievementName.FISH_OUT_OF_WATER, VanillaAchievementName.WALK_THE_PLANK, VanillaAchievementName.DEFEAT_DREADNAUTILUS]);
+                ConnectAchievementItems(VanillaAchievementName.THE_GREAT_SOUTHERN_PLANTKILL, [VanillaAchievementName.BUCKETS_OF_BOLTS, VanillaAchievementName.LIHZAHRDIAN_IDOL, VanillaAchievementName.DEFEAT_EMPRESS_OF_LIGHT, VanillaAchievementName.BALEFUL_HARVEST, VanillaAchievementName.ICE_SCREAM]);
+                ConnectAchievementItems(VanillaAchievementName.LIHZAHRDIAN_IDOL, [VanillaAchievementName.TIN_FOIL_HATTER, VanillaAchievementName.DEFEAT_OLD_ONES_ARMY_TIER3]);
+                ConnectAchievementItems(VanillaAchievementName.OBSESSIVE_DEVOTION, [VanillaAchievementName.BONED, VanillaAchievementName.LIHZAHRDIAN_IDOL, VanillaAchievementName.STAR_DESTROYER]);
+                ConnectAchievementItems(VanillaAchievementName.CHAMPION_OF_TERRARIA, [VanillaAchievementName.STAR_DESTROYER]);
                 break;
             case 2:
-                AppendAchievementItem(items, "FASHION_STATEMENT", new(0, -6));
-                AppendAchievementItem(items, "TIMBER", new(0, 0));
-                AppendAchievementItem(items, "GLORIOUS_GOLDEN_POLE", new(0, 6));
+                AppendAchievementItem(items, VanillaAchievementName.FASHION_STATEMENT, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.THE_CAVALRY, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.TIMBER, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.GET_ANKH_SHIELD, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.GET_CELL_PHONE, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.DYE_HARD, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.HEAD_IN_THE_CLOUDS, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.STAR_POWER, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.BENCHED, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.MATCHING_ATTIRE, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.GET_TERRASPARK_BOOTS, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.OBTAIN_HAMMER, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.COMPLETELY_AWESOME, new(offsetX, 8));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.LIKE_A_BOSS, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.TEMPLE_RAIDER, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.HOLD_ON_TIGHT, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.HEAVY_METAL, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.DRAX_ATTAX, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.GLORIOUS_GOLDEN_POLE, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.MINER_FOR_FIRE, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.SWORD_OF_THE_HERO, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.PRISMANCER, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.GET_GOLDEN_DELIGHT, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.SICK_THROW, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.GET_ZENITH, new(offsetX, 6));
 
-                AppendAchievementItem(items, "DYE_HARD", new(2, -6));
-                AppendAchievementItem(items, "STAR_POWER", new(2, -2));
-                AppendAchievementItem(items, "BENCHED", new(2, 0));
-                AppendAchievementItem(items, "MATCHING_ATTIRE", new(2, 2));
-                AppendAchievementItem(items, "GET_CELL_PHONE", new(2, 6));
-
-                AppendAchievementItem(items, "THE_CAVALRY", new(4, -6));
-                AppendAchievementItem(items, "OBTAIN_HAMMER", new(4, -2));
-                AppendAchievementItem(items, "COMPLETELY_AWESOME", new(4, 2));
-                AppendAchievementItem(items, "GET_TERRASPARK_BOOTS", new(4, 6));
-
-                AppendAchievementItem(items, "LIKE_A_BOSS", new(6, -6));
-                AppendAchievementItem(items, "HOLD_ON_TIGHT", new(6, -2));
-                AppendAchievementItem(items, "HEAVY_METAL", new(6, 0));
-                AppendAchievementItem(items, "DRAX_ATTAX", new(6, 2));
-                AppendAchievementItem(items, "GET_GOLDEN_DELIGHT", new(6, 6));
-
-                AppendAchievementItem(items, "HEAD_IN_THE_CLOUDS", new(8, -6));
-                AppendAchievementItem(items, "MINER_FOR_FIRE", new(8, -2));
-                AppendAchievementItem(items, "SWORD_OF_THE_HERO", new(8, 0));
-                AppendAchievementItem(items, "PRISMANCER", new(8, 2));
-                AppendAchievementItem(items, "GET_ANKH_SHIELD", new(8, 6));
-
-                AppendAchievementItem(items, "TEMPLE_RAIDER", new(10, -6));
-                AppendAchievementItem(items, "GET_ZENITH", new(10, 0));
-                AppendAchievementItem(items, "SICK_THROW", new(10, 6));
-
-
-                ConnectAchievementItems("BENCHED", new() { "TIMBER", "OBTAIN_HAMMER", "HEAVY_METAL", "MATCHING_ATTIRE", "STAR_POWER" });
-                ConnectAchievementItems("HEAVY_METAL", new() { "HOLD_ON_TIGHT", "MINER_FOR_FIRE", "COMPLETELY_AWESOME", "PRISMANCER", "SWORD_OF_THE_HERO", "DRAX_ATTAX" });
-                ConnectAchievementItems("SWORD_OF_THE_HERO", new() { "GET_ZENITH" });
+                ConnectAchievementItems(VanillaAchievementName.BENCHED, [VanillaAchievementName.TIMBER, VanillaAchievementName.OBTAIN_HAMMER, VanillaAchievementName.HEAVY_METAL, VanillaAchievementName.MATCHING_ATTIRE, VanillaAchievementName.STAR_POWER]);
+                ConnectAchievementItems(VanillaAchievementName.HEAVY_METAL, [VanillaAchievementName.HOLD_ON_TIGHT, VanillaAchievementName.MINER_FOR_FIRE, VanillaAchievementName.COMPLETELY_AWESOME, VanillaAchievementName.PRISMANCER, VanillaAchievementName.SWORD_OF_THE_HERO, VanillaAchievementName.DRAX_ATTAX]);
+                ConnectAchievementItems(VanillaAchievementName.SWORD_OF_THE_HERO, [VanillaAchievementName.GET_ZENITH]);
                 break;
             case 3:
-                AppendAchievementItem(items, "NO_HOBO", new(0, -6));
-                AppendAchievementItem(items, "OOO_SHINY", new(1, -6));
-                AppendAchievementItem(items, "HEART_BREAKER", new(2, -6));
-                AppendAchievementItem(items, "I_AM_LOOT", new(3, -6));
-                AppendAchievementItem(items, "SMASHING_POPPET", new(4, -6));
-                AppendAchievementItem(items, "WHERES_MY_HONEY", new(5, -6));
-                AppendAchievementItem(items, "DUNGEON_HEIST", new(6, -6));
-                AppendAchievementItem(items, "ITS_GETTING_HOT_IN_HERE", new(7, -6));
-                AppendAchievementItem(items, "ITS_HARD", new(8, -6));
-                AppendAchievementItem(items, "BEGONE_EVIL", new(9, -6));
-                AppendAchievementItem(items, "EXTRA_SHINY", new(10, -6));
-                AppendAchievementItem(items, "PHOTOSYNTHESIS", new(11, -6));
-                AppendAchievementItem(items, "GET_A_LIFE", new(0, -5));
-                AppendAchievementItem(items, "ROBBING_THE_GRAVE", new(1, -5));
-                AppendAchievementItem(items, "BIG_BOOTY", new(2, -5));
-                AppendAchievementItem(items, "BLOODBATH", new(3, -5));
-                AppendAchievementItem(items, "KILL_THE_SUN", new(4, -5));
-                AppendAchievementItem(items, "STICKY_SITUATION", new(5, -5));
-                AppendAchievementItem(items, "JEEPERS_CREEPERS", new(6, -5));
-                AppendAchievementItem(items, "FUNKYTOWN", new(7, -5));
-                AppendAchievementItem(items, "INTO_ORBIT", new(8, -5));
-                AppendAchievementItem(items, "ROCK_BOTTOM", new(9, -5));
-                AppendAchievementItem(items, "IT_CAN_TALK", new(10, -5));
-                AppendAchievementItem(items, "WATCH_YOUR_STEP", new(11, -5));
-                AppendAchievementItem(items, "YOU_CAN_DO_IT", new(0, -4));
-                AppendAchievementItem(items, "FOUND_GRAVEYARD", new(1, -4));
-                AppendAchievementItem(items, "FIND_A_FAIRY", new(2, -4));
-                AppendAchievementItem(items, "PLAY_ON_A_SPECIAL_SEED", new(3, -4));
-                AppendAchievementItem(items, "TRANSMUTE_ITEM", new(4, -4));
+                AppendAchievementItem(items, VanillaAchievementName.YOU_CAN_DO_IT, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.BLOODBATH, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.ITS_GETTING_HOT_IN_HERE, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.WATCH_YOUR_STEP, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.OOO_SHINY, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.STICKY_SITUATION, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.ROCK_BOTTOM, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.HEART_BREAKER, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.I_AM_LOOT, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.ROBBING_THE_GRAVE, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.BIG_BOOTY, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.FUNKYTOWN, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.JEEPERS_CREEPERS, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.PLAY_ON_A_SPECIAL_SEED, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.INTO_ORBIT, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.KILL_THE_SUN, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.ITS_HARD, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.IT_CAN_TALK, new(offsetX, 8));
+                AppendAchievementItem(items, VanillaAchievementName.TRANSMUTE_ITEM, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.NO_HOBO, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.FIND_A_FAIRY, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.BEGONE_EVIL, new(offsetX, 4));
+                AppendAchievementItem(items, VanillaAchievementName.PHOTOSYNTHESIS, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.GET_A_LIFE, new(offsetX, 8));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.SMASHING_POPPET, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.FOUND_GRAVEYARD, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.EXTRA_SHINY, new(offsetX, 4));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.WHERES_MY_HONEY, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.DUNGEON_HEIST, new(offsetX, 2));
+
+                ConnectAchievementItems(VanillaAchievementName.ITS_GETTING_HOT_IN_HERE, [VanillaAchievementName.ROCK_BOTTOM]);
+                ConnectAchievementItems(VanillaAchievementName.ITS_HARD, [VanillaAchievementName.ITS_GETTING_HOT_IN_HERE, VanillaAchievementName.GET_A_LIFE, VanillaAchievementName.BEGONE_EVIL, VanillaAchievementName.PHOTOSYNTHESIS, VanillaAchievementName.IT_CAN_TALK, VanillaAchievementName.ROBBING_THE_GRAVE, VanillaAchievementName.KILL_THE_SUN, VanillaAchievementName.BIG_BOOTY]);
+                ConnectAchievementItems(VanillaAchievementName.BEGONE_EVIL, [VanillaAchievementName.EXTRA_SHINY]);
+                ConnectAchievementItems(VanillaAchievementName.FUNKYTOWN, [VanillaAchievementName.IT_CAN_TALK]);
                 break;
             case 4:
-                AppendAchievementItem(items, "REAL_ESTATE_AGENT", new(0, 0));
-                AppendAchievementItem(items, "NOT_THE_BEES", new(0, 0));
-                AppendAchievementItem(items, "MECHA_MAYHEM", new(0, 0));
-                AppendAchievementItem(items, "GELATIN_WORLD_TOUR", new(0, 0));
-                AppendAchievementItem(items, "BULLDOZER", new(0, 0));
-                AppendAchievementItem(items, "LUCKY_BREAK", new(0, 0));
-                AppendAchievementItem(items, "THROWING_LINES", new(0, 0));
-                AppendAchievementItem(items, "FREQUENT_FLYER", new(0, 0));
-                AppendAchievementItem(items, "RAINBOWS_AND_UNICORNS", new(0, 0));
-                AppendAchievementItem(items, "YOU_AND_WHAT_ARMY", new(0, 0));
-                AppendAchievementItem(items, "MARATHON_MEDALIST", new(0, 0));
-                AppendAchievementItem(items, "SERVANT_IN_TRAINING", new(0, 0));
-                AppendAchievementItem(items, "GOOD_LITTLE_SLAVE", new(0, 0));
-                AppendAchievementItem(items, "TROUT_MONKEY", new(0, 0));
-                AppendAchievementItem(items, "FAST_AND_FISHIOUS", new(0, 0));
-                AppendAchievementItem(items, "SUPREME_HELPER_MINION", new(0, 0));
-                AppendAchievementItem(items, "TOPPED_OFF", new(0, 0));
-                AppendAchievementItem(items, "SLAYER_OF_WORLDS", new(0, 0));
-                AppendAchievementItem(items, "FLY_A_KITE_ON_A_WINDY_DAY", new(0, 0));
-                AppendAchievementItem(items, "GO_LAVA_FISHING", new(0, 0));
-                AppendAchievementItem(items, "TURN_GNOME_TO_STATUE", new(0, 0));
-                AppendAchievementItem(items, "TALK_TO_NPC_AT_MAX_HAPPINESS", new(0, 0));
-                AppendAchievementItem(items, "PET_THE_PET", new(0, 0));
-                AppendAchievementItem(items, "THROW_A_PARTY", new(0, 0));
-                AppendAchievementItem(items, "DIE_TO_DEAD_MANS_CHEST", new(0, 0));
-                AppendAchievementItem(items, "DRINK_BOTTLED_WATER_WHILE_DROWNING", new(0, 0));
-                AppendAchievementItem(items, "ALL_TOWN_SLIMES", new(0, 0));
-                AppendAchievementItem(items, "PURIFY_ENTIRE_WORLD", new(0, 0));
-                AppendAchievementItem(items, "TO_INFINITY_AND_BEYOND", new(0, 0));
+                AppendAchievementItem(items, VanillaAchievementName.TALK_TO_NPC_AT_MAX_HAPPINESS, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.PET_THE_PET, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.GELATIN_WORLD_TOUR, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.NOT_THE_BEES, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.DRINK_BOTTLED_WATER_WHILE_DROWNING, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.THROW_A_PARTY, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.TOPPED_OFF, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.RAINBOWS_AND_UNICORNS, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.YOU_AND_WHAT_ARMY, new(offsetX, 6));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.BULLDOZER, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.SERVANT_IN_TRAINING, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.SLAYER_OF_WORLDS, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.DIE_TO_DEAD_MANS_CHEST, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.LUCKY_BREAK, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.MARATHON_MEDALIST, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.GOOD_LITTLE_SLAVE, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.ALL_TOWN_SLIMES, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.TURN_GNOME_TO_STATUE, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.FLY_A_KITE_ON_A_WINDY_DAY, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.FREQUENT_FLYER, new(offsetX, 0));
+                AppendAchievementItem(items, VanillaAchievementName.TROUT_MONKEY, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.REAL_ESTATE_AGENT, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.TO_INFINITY_AND_BEYOND, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.THROWING_LINES, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.FAST_AND_FISHIOUS, new(offsetX, 2));
+                AppendAchievementItem(items, VanillaAchievementName.GO_LAVA_FISHING, new(offsetX, 10));
+                AppendAchievementItem(items, VanillaAchievementName.PURIFY_ENTIRE_WORLD, new(offsetX, 6));
+                AppendAchievementItem(items, VanillaAchievementName.MECHA_MAYHEM, new(offsetX, 12));
+                offsetX += 2;
+                AppendAchievementItem(items, VanillaAchievementName.SUPREME_HELPER_MINION, new(offsetX, 2));
+
+                ConnectAchievementItems(VanillaAchievementName.GOOD_LITTLE_SLAVE, [VanillaAchievementName.SERVANT_IN_TRAINING, VanillaAchievementName.TROUT_MONKEY]);
+                ConnectAchievementItems(VanillaAchievementName.FAST_AND_FISHIOUS, [VanillaAchievementName.TROUT_MONKEY, VanillaAchievementName.SUPREME_HELPER_MINION]);
                 break;
         }
 
         items.ForEach(panel.Append);
 
-        void AppendAchievementItem(List<UIAchievementItem> list, string achievement, Vector2 displacementFactor, float vAlign = 0.5f)
+        void AppendAchievementItem(List<UIAchievementItem> list, string achievement, Vector2 displacementFactor)
         {
-            new UIAchievementItem(FindAchievement(achievement)).With(e =>
+            new UIAchievementItem(ModPlayer.FindAchievement(achievement)).With(e =>
             {
-                e.VAlign = vAlign;
                 e.Left = StyleDimension.FromPixels(60f * displacementFactor.X);
                 e.Top = StyleDimension.FromPixels(60f * displacementFactor.Y);
 
