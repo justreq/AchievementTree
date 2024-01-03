@@ -6,16 +6,10 @@ using Terraria.ModLoader;
 using Terraria.UI;
 
 namespace AchievementTree.Elements;
-public class UIAchievementConnector : UIElement
+public class UIAchievementConnector(UIAchievementItem connectFrom, UIAchievementItem connectTo) : UIElement()
 {
-    public UIAchievementItem connectFrom;
-    public UIAchievementItem connectTo;
-
-    public UIAchievementConnector(UIAchievementItem connectFrom, UIAchievementItem connectTo) : base()
-    {
-        this.connectFrom = connectFrom;
-        this.connectTo = connectTo;
-    }
+    public UIAchievementItem connectFrom = connectFrom;
+    public UIAchievementItem connectTo = connectTo;
 
     protected override void DrawSelf(SpriteBatch spriteBatch)
     {
@@ -30,7 +24,7 @@ public class UIAchievementConnector : UIElement
 
         for (int i = 0; i < distance; i++)
         {
-            spriteBatch.Draw(ModContent.Request<Texture2D>($"{nameof(AchievementTree)}/Assets/AchievementConnector", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value, startPosition + stepDistance * i, null, Color.White, rotation + MathHelper.Pi, new(1, 4), 1f, SpriteEffects.None, 0);
+            spriteBatch.Draw(ModContent.Request<Texture2D>($"{nameof(AchievementTree)}/Assets/AchievementConnector{(connectFrom.complete && connectTo.complete ? "Full" : "")}", ReLogic.Content.AssetRequestMode.ImmediateLoad).Value, startPosition + stepDistance * i, null, Color.White, rotation + MathHelper.Pi, new(1, 4), 1f, SpriteEffects.None, 0);
         }
     }
 }

@@ -16,7 +16,7 @@ using Terraria.UI;
 namespace AchievementTree;
 public class AchievementTreeUI : UIState
 {
-    static AchievementTreeModPlayer ModPlayer => Main.LocalPlayer.GetModPlayer<AchievementTreeModPlayer>();
+    AchievementTreeModPlayer ModPlayer => Main.LocalPlayer.GetModPlayer<AchievementTreeModPlayer>();
 
     UIElement ContentContainer { get; set; }
     UIElement AchievementTreeContainer { get; set; }
@@ -143,7 +143,7 @@ public class AchievementTreeUI : UIState
 
             if (mouseTextPosition.X > Main.screenWidth - x) mouseTextPosition.X = Main.screenWidth - x;
 
-            Utils.DrawBorderStringFourWay(spriteBatch, FontAssets.MouseText.Value, hoverText, mouseTextPosition.X, mouseTextPosition.Y, element.completed ? Color.White : new Color(255, 221, 67), Color.Black, Vector2.Zero);
+            Utils.DrawBorderStringFourWay(spriteBatch, FontAssets.MouseText.Value, hoverText, mouseTextPosition.X, mouseTextPosition.Y, element.complete ? Color.White : new Color(255, 221, 67), Color.Black, Vector2.Zero);
 
             break;
         }

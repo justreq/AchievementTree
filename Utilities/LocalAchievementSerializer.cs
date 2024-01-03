@@ -3,9 +3,10 @@ using Terraria.Achievements;
 using Terraria.ModLoader.IO;
 
 namespace AchievementTree.Utilities;
-public class LocalAchievementSerializer : TagSerializer<LocalAchievement, TagCompound>
+
+public class LocalModdedAchievementSerializer : TagSerializer<LocalModdedAchievement, TagCompound>
 {
-    public override TagCompound Serialize(LocalAchievement value) => new()
+    public override TagCompound Serialize(LocalModdedAchievement value) => new()
     {
         [nameof(value.name)] = value.name,
         [nameof(value.friendlyName)] = value.friendlyName,
@@ -14,7 +15,17 @@ public class LocalAchievementSerializer : TagSerializer<LocalAchievement, TagCom
         [nameof(value.icons)] = value.icons,
     };
 
-    public override LocalAchievement Deserialize(TagCompound tag) => new(tag.GetString("name"), tag.GetString("friendlyName"), tag.GetString("description"), (AchievementCategory)tag.GetInt("category"), tag.Get<LocalAchievementTexture>("icons"));
+    public override LocalModdedAchievement Deserialize(TagCompound tag) => new(tag.GetString("name"), tag.GetString("friendlyName"), tag.GetString("description"), (AchievementCategory)tag.GetInt("category"), tag.Get<LocalAchievementTexture>("icons"));
+}
+
+public class LocalVanillaAchievementSerializer : TagSerializer<LocalVanillaAchievement, TagCompound>
+{
+    public override TagCompound Serialize(LocalVanillaAchievement value) => new()
+    {
+        [nameof(value.name)] = value.name,
+    };
+
+    public override LocalVanillaAchievement Deserialize(TagCompound tag) => new(tag.GetString("name"));
 }
 
 public class LocalAchievementTextureSerializer : TagSerializer<LocalAchievementTexture, TagCompound>

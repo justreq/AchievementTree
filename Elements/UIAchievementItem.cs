@@ -1,6 +1,7 @@
 ﻿using AchievementTree.Utilities.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ModLoader;
@@ -9,7 +10,7 @@ using Terraria.UI;
 namespace AchievementTree.Elements;
 public class UIAchievementItem : UIElement
 {
-    public bool completed = false;
+    public bool complete = false;
     public float opacity = 1f;
 
     Rectangle frame;
@@ -29,7 +30,7 @@ public class UIAchievementItem : UIElement
 
         UpdateFrame();
 
-        Icon = this.AddElement(new UIImageFramed(localAchievement.modded ? ModContent.Request<Texture2D>(localAchievement.icons.TexturePath, ReLogic.Content.AssetRequestMode.ImmediateLoad) : Main.Assets.Request<Texture2D>(localAchievement.icons.TexturePath, ReLogic.Content.AssetRequestMode.ImmediateLoad), frame).With(e =>
+        Icon = this.AddElement(new UIImageFramed(localAchievement is LocalModdedAchievement ? ModContent.Request<Texture2D>(localAchievement.icons.TexturePath, ReLogic.Content.AssetRequestMode.ImmediateLoad) : Main.Assets.Request<Texture2D>(localAchievement.icons.TexturePath, ReLogic.Content.AssetRequestMode.ImmediateLoad), frame).With(e =>
         {
             e.HAlign = 0.5f;
             e.VAlign = 0.5f;
@@ -42,7 +43,7 @@ public class UIAchievementItem : UIElement
     {
         base.DrawSelf(spriteBatch);
 
-        completed = Main.LocalPlayer.GetModPlayer<AchievementTreeModPlayer>().FindAchievement(localAchievement.name).isCompleted;
+        complete = Main.LocalPlayer.GetModPlayer<AchievementTreeModPlayer>().FindAchievement(localAchievement.name).isCompleted || new List<string> { "TIMBER", "BENCHED" }.Contains(localAchievement.name);
         UpdateFrame();
 
         Icon.Color = Border.Color = Color.White * opacity;
@@ -50,7 +51,7 @@ public class UIAchievementItem : UIElement
 
     private void UpdateFrame()
     {
-        frame = completed ? localAchievement.icons.CompleteFrame : localAchievement.icons.CompleteFrame;
+        frame = complete ? localAchievement.icons.CompleteFrame : localAchievement.icons.IncompleteFrame;
         Icon?.SetFrame(frame);
     }
 }
