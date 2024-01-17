@@ -1,4 +1,5 @@
 using MonoMod.Cil;
+using System;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
@@ -7,10 +8,9 @@ namespace AchievementTree
 {
     public class AchievementTree : Mod
     {
-        public AchievementTreeUI AchievementTreeUI = new();
-
         public override void Load()
         {
+            Main.Achievements.ClearAll();
             IL_Main.CanPauseGame += IL_Main_CanPauseGame;
             IL_IngameOptions.Draw += IL_IngameOptions_Draw;
             IL_AchievementAdvisor.DrawOneAchievement += IL_AchievementAdvisor_DrawOneAchievement;
@@ -25,7 +25,7 @@ namespace AchievementTree
 
             c.EmitDelegate(() =>
             {
-                return AchievementTreeUI;
+                return new AchievementTreeUI();
             });
         }
 
@@ -38,8 +38,7 @@ namespace AchievementTree
 
             c.EmitDelegate(() =>
             {
-                AchievementTreeUI = new();
-                IngameFancyUI.OpenUIState(AchievementTreeUI);
+                IngameFancyUI.OpenUIState(new AchievementTreeUI());
             });
         }
 
@@ -52,8 +51,7 @@ namespace AchievementTree
 
             c.EmitDelegate(() =>
             {
-                AchievementTreeUI = new();
-                IngameFancyUI.OpenUIState(AchievementTreeUI);
+                IngameFancyUI.OpenUIState(new AchievementTreeUI());
             });
         }
     }

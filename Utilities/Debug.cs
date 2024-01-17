@@ -23,8 +23,11 @@ class QuickRestart
 {
     public static void UpdateApplication(Type[] updatedTypes)
     {
-        IngameFancyUI.Close();
-        IngameFancyUI.OpenUIState(new AchievementTreeUI());
+        Main.QueueMainThreadAction(() =>
+        {
+            IngameFancyUI.Close();
+            IngameFancyUI.OpenUIState(new AchievementTreeUI());
+        });
     }
 }
 

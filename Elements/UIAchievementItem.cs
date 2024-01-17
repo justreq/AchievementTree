@@ -43,7 +43,7 @@ public class UIAchievementItem : UIElement
     {
         base.DrawSelf(spriteBatch);
 
-        complete = Main.LocalPlayer.GetModPlayer<AchievementTreeModPlayer>().FindAchievement(localAchievement.name).isCompleted || new List<string> { "TIMBER", "BENCHED" }.Contains(localAchievement.name);
+        complete = Main.LocalPlayer.GetModPlayer<AchievementTreeModPlayer>().FindAchievement(localAchievement.name).isCompleted;
         UpdateFrame();
 
         Icon.Color = Border.Color = Color.White * opacity;

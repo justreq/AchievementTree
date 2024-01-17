@@ -2,7 +2,7 @@
 using Terraria.Achievements;
 using Terraria.ModLoader.IO;
 
-namespace AchievementTree.Utilities;
+namespace AchievementTree.Utilities.Serializers;
 
 public class LocalModdedAchievementSerializer : TagSerializer<LocalModdedAchievement, TagCompound>
 {
@@ -13,6 +13,7 @@ public class LocalModdedAchievementSerializer : TagSerializer<LocalModdedAchieve
         [nameof(value.description)] = value.description,
         [nameof(value.category)] = (int)value.category,
         [nameof(value.icons)] = value.icons,
+        [nameof(value.isCompleted)] = value.isCompleted,
     };
 
     public override LocalModdedAchievement Deserialize(TagCompound tag) => new(tag.GetString("name"), tag.GetString("friendlyName"), tag.GetString("description"), (AchievementCategory)tag.GetInt("category"), tag.Get<LocalAchievementTexture>("icons"));
@@ -23,6 +24,7 @@ public class LocalVanillaAchievementSerializer : TagSerializer<LocalVanillaAchie
     public override TagCompound Serialize(LocalVanillaAchievement value) => new()
     {
         [nameof(value.name)] = value.name,
+        [nameof(value.isCompleted)] = value.isCompleted,
     };
 
     public override LocalVanillaAchievement Deserialize(TagCompound tag) => new(tag.GetString("name"));
